@@ -9,10 +9,11 @@ body {
 }
 
 #dragElement {
-    width: 150px;
-    height: 150px;
+    width: 200px;
+    height: 200px;
     background-color: dodgerblue;
     border-radius: 3px;
+    z-index: 1;
 }
 
 #dragElement.transition {

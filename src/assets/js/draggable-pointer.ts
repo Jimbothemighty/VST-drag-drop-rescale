@@ -1,5 +1,10 @@
 import PointerTracker from "./PointerTracker/PointerTracker.mjs"
 
+type dimensionsType = {
+    x : number,
+    y : number
+}
+
 class PointerTrackerDragElement extends PointerTracker {
     dragItem: HTMLDivElement;
     currentX: number;
@@ -11,8 +16,9 @@ class PointerTrackerDragElement extends PointerTracker {
     container: HTMLBodyElement;
     firstTimeSetup: boolean;
     paddingBoundary: number;
+    originalDimensions : dimensionsType;
 
-    constructor(dragItem, container, options) {
+    constructor(dragItem : HTMLDivElement, container : HTMLElement, options : object) {
         super(container, options);
         this.dragItem = dragItem;
         this.xOffset = 0;
@@ -24,23 +30,81 @@ class PointerTrackerDragElement extends PointerTracker {
         this.firstTimeSetup = false;
         this.addResizeListener();
         this.paddingBoundary = 20;
+
+        this.originalDimensions = { 
+            x : this.dragItem.clientWidth, 
+            y : this.dragItem.clientHeight
+        };
     }
 
+    // scaling function - 'pinched' from PinchZoom
+    getDistance(a, b) {
+        if (!b)
+            return 0;
+        return Math.sqrt((b.clientX - a.clientX) ** 2 + (b.clientY - a.clientY) ** 2);
+    }
+
+    calculateNewSizeAgainstLimits(newWidth : number, newHeight : number) : dimensionsType {
+        const maxWidthAgainstBody = document.body.clientWidth - (this.paddingBoundary * 2);
+        const maxHeightAgainstBody = document.body.clientWidth - (this.paddingBoundary * 2);
+        const maxWidthAgainstOrig = this.originalDimensions.x * 4;
+        const maxHeightAgainstOrig = this.originalDimensions.y * 4;
+        const minWidthAgainstOrig = Math.ceil(this.originalDimensions.x / 4);
+        const minHeightAgainstOrig = Math.ceil(this.originalDimensions.y / 4);
+
+        if (newWidth > maxWidthAgainstOrig) {
+            newWidth = maxWidthAgainstOrig;
+        }
+
+        if (newHeight > maxHeightAgainstOrig) {
+            newHeight = maxHeightAgainstOrig;
+        }
+
+        if (newWidth > maxWidthAgainstBody) {
+            newWidth = maxWidthAgainstBody;
+        }
+
+        if (newHeight > maxHeightAgainstBody) {
+            newHeight = maxHeightAgainstBody;
+        }
+
+        if (newWidth < minWidthAgainstOrig) {
+            newWidth = minWidthAgainstOrig;
+        }
+
+        if (newHeight < minHeightAgainstOrig) {
+            newHeight = minHeightAgainstOrig;
+        }
+
+        newWidth = Math.ceil(newWidth)
+        newHeight = Math.ceil(newHeight)
+
+        this.dragItem.innerHTML = `width:${newWidth}<br>height:${newHeight}`
+
+        return {
+            x : newWidth,
+            y : newHeight
+        }
+    }
+
+    repositionElement() {
+        console.log('resize')
+        var maxXPos = document.body.clientWidth - this.dragItem.clientWidth - this.paddingBoundary;
+        var maxYPos = document.body.clientHeight - this.dragItem.clientHeight - this.paddingBoundary;
+
+        if (this.xOffset > maxXPos || this.yOffset > maxYPos) {
+            this.setTranslate(
+                this.xOffset > maxXPos ? maxXPos : this.xOffset,
+                this.yOffset > maxYPos ? maxYPos : this.yOffset,
+                this.dragItem
+            );
+        }
+    }
+
+
     addResizeListener() {
-        const thisClass = this;
-
         window.addEventListener("resize", (e) => {
-            console.log('resize')
-            var maxXPos = document.body.clientWidth - thisClass.dragItem.clientWidth - thisClass.paddingBoundary;
-            var maxYPos = document.body.clientHeight - thisClass.dragItem.clientHeight - thisClass.paddingBoundary;
-
-            if (thisClass.xOffset > maxXPos || thisClass.yOffset > maxYPos) {
-                thisClass.setTranslate(
-                    thisClass.xOffset > maxXPos ? maxXPos : thisClass.xOffset,
-                    thisClass.yOffset > maxYPos ? maxYPos : thisClass.yOffset,
-                    thisClass.dragItem
-                );
-            }
+            this.repositionElement();
         });
     }
 
@@ -96,76 +160,25 @@ export function startPointerTracker(dragItem, container) {
                 return;
             }
 
-            debugger
-
-            if (changedPointers.length > 1) {
+            if (changedPointers.length === 2) {
                 // pinch zoom
                 event.stopPropagation()
 
+                const prevDistance = this.getDistance(previousPointers[0], previousPointers[1]);
+                const newDistance = this.getDistance(pointerTracker.currentPointers[0], pointerTracker.currentPointers[1]);
+                const scaleDiff = prevDistance ? newDistance / prevDistance : 1;
 
-                let startX = changedPointers[0].clientX;
-                let endX = changedPointers[changedPointers.length - 1].clientX;
-                let newWidth = endX - startX;
+                let newSizes = this.calculateNewSizeAgainstLimits(
+                    dragItem.clientWidth * scaleDiff,
+                    dragItem.clientHeight * scaleDiff
+                )
 
-                let startY = changedPointers[0].clientY;
-                let endY = changedPointers[changedPointers.length - 1].clientY;
-                let newHeight = endY - startY;
+                this.dragItem.style.width = `${newSizes.x}px`; // - this.startX
+                this.dragItem.style.height = `${newSizes.y}px`; // - this.startY
 
-                if (newWidth < newHeight) {
-                    newHeight = newWidth
-                }
-                else if (newWidth > newHeight) {
-                    newWidth = newHeight
-                }
-
-
-
-                let originalDimensions = 150;
-
-                if (newWidth > originalDimensions * 4) {
-                    newWidth = originalDimensions * 4;
-                }
-
-                if (newHeight > originalDimensions * 4) {
-                    newHeight = originalDimensions * 4;
-                }
-
-                if (newWidth > document.body.clientWidth - 20) {
-                    newWidth = document.body.clientWidth - 20;
-                }
-
-                if (newHeight > document.body.clientHeight - 20) {
-                    newHeight = document.body.clientHeight - 20;
-                }
-
-                if (newWidth < originalDimensions / 4) {
-                    newWidth = Math.ceil(originalDimensions / 4);
-                }
-
-                if (newHeight < originalDimensions / 4) {
-                    newHeight = Math.ceil(originalDimensions / 4);
-                }
-
-                if (isNaN(newWidth)) {
-                    alert("Error, width is NAN")
-                }
-                else if (isNaN(newHeight)) {
-                    alert("Error, height is NAN")
-                }
-
-                if (newWidth < originalDimensions / 4) {
-                    newWidth = Math.ceil(originalDimensions / 4);
-                    alert("ugh it's tiny!")
-                }
-                else if (newHeight < originalDimensions / 4) {
-                    newHeight = Math.ceil(originalDimensions / 4);
-                    alert("ugh it's tiny!")
-                }
-
-                this.dragItem.style.width = `${newWidth}px`; // - this.startX
-                this.dragItem.style.height = `${newHeight}px`; // - this.startY
+                this.repositionElement();
             }
-            else {
+            else if (changedPointers.length === 1) {
                 this.currentX = changedPointers[0].clientX - this.initialX;
                 this.currentY = changedPointers[0].clientY - this.initialY;
     
