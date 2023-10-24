@@ -8,7 +8,7 @@
 - Resize on pinch-zoom
 - Boundary limits (20px from edge)
 - Screen resize enforces boundaries (although will overflow if window is smaller than element size)
-- Min / Max scale to *4 and /4
+- Min / Max scale to /4 and *4
 - Smooth glide to centre on button press
 
 # Running the project
