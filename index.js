@@ -1,5 +1,6 @@
 import { setDraggable } from "./src/assets/js/draggable"
-import { startPointerTracker, startPointerTrackerBase } from "./src/assets/js/draggable-pointer"
+import { startPointerTracker } from "./src/assets/js/draggable-pointer"
+import "./src/assets/css/style.css"
 
 window.addEventListener("load", () => {
     let elem = document.querySelector("#dragElement")
@@ -11,8 +12,9 @@ window.addEventListener("load", () => {
     document.querySelector("body").append(btn)
     btn.innerText = "Move to middle"
     btn.addEventListener("click", () => {
-        thisPointerTracker.moveToMiddle()
+        thisPointerTracker.moveToMiddle(true)
     })
 
     thisPointerTracker = startPointerTracker(elem, document.querySelector("body"))
+    thisPointerTracker.moveToMiddle(false)
 })

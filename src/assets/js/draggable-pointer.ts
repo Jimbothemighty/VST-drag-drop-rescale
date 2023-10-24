@@ -18,6 +18,8 @@ class PointerTrackerDragElement extends PointerTracker {
         this.yOffset = 0;
         this.initialX = 0;
         this.initialY = 0;
+        this.currentX = 0;
+        this.initialY = 0;
         this.firstTimeSetup = false;
         this.addResizeListener();
     }
@@ -40,7 +42,7 @@ class PointerTrackerDragElement extends PointerTracker {
         });
     }
 
-    setTranslate(xPos: number, yPos: number, el: HTMLElement) {
+    setTranslate(xPos: number, yPos: number, el: HTMLElement, animate : boolean = false) {
         console.log("translating");
         console.log(el)
         let maxXPos = document.body.clientWidth - this.dragItem.clientWidth;
@@ -54,16 +56,23 @@ class PointerTrackerDragElement extends PointerTracker {
         xPos = xPos < 0 ? 0 : xPos;
         yPos = yPos < 0 ? 0 : yPos;
 
+        if (animate) {
+            el.classList.add("transition")
+            setTimeout(() => {
+                el.classList.remove("transition")
+            }, 1000)
+        }
+
         el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
     }
 
-    moveToMiddle() {
+    moveToMiddle(animate : boolean = true) {
         this.xOffset = (document.body.clientWidth - this.dragItem.clientWidth) / 2;
         this.yOffset = (document.body.clientHeight - this.dragItem.clientHeight) / 2;
         this.currentX = document.body.clientWidth * 0.25;
         this.currentY = document.body.clientHeight * 0.25;
 
-        this.setTranslate(this.xOffset, this.yOffset, this.dragItem);
+        this.setTranslate(this.xOffset, this.yOffset, this.dragItem, animate);
     }
 }
 
