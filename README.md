@@ -18,6 +18,7 @@
 
 # Notes
 - I ran this in host mode so it exposed over 192.168 so I could test via my phone
+- I made the class put the dimensions in the square being rendered so prove that it did not exceed or underflow the scale limits.
 
 # Issues
 - I think on first click then the drag is not initiating for some reason. But its a barely noticable issue.
