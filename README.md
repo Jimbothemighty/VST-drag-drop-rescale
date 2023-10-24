@@ -24,3 +24,4 @@
 # Issues
 - I think on first click then the drag is not initiating for some reason. But its a barely noticable issue.
 - Interview guidance asked for resize ideally with 1 finger. I couldn't understand how to achieve that in the time provided given that it would be indistinguishable from a normal drag event.
+- In order to understand the boundary I refer directly to the body.clientWidth/clientHeight, which is also the container element provided to PointerTracker. This is a private propety in PointerTracker. It would be better to modify the library to make it protected so that it can be referenced in my extension class. Without this then potentially I could pass in a different container than the body and then I have to modify my code in other non-obvious places to make it work.

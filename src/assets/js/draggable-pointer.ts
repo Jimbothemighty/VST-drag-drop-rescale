@@ -5,6 +5,10 @@ type dimensionsType = {
     y : number
 }
 
+type extendedOptions = {
+    paddingBoundary : number
+}
+
 class PointerTrackerDragElement extends PointerTracker {
     dragItem: HTMLDivElement;
     currentX: number;
@@ -18,7 +22,7 @@ class PointerTrackerDragElement extends PointerTracker {
     paddingBoundary: number;
     originalDimensions : dimensionsType;
 
-    constructor(dragItem : HTMLDivElement, container : HTMLElement, options : object) {
+    constructor(dragItem : HTMLDivElement, container : HTMLElement, options : object, extendedOptions : extendedOptions) {
         super(container, options);
         this.dragItem = dragItem;
         this.xOffset = 0;
@@ -29,7 +33,7 @@ class PointerTrackerDragElement extends PointerTracker {
         this.initialY = 0;
         this.firstTimeSetup = false;
         this.addResizeListener();
-        this.paddingBoundary = 20;
+        this.paddingBoundary = extendedOptions.paddingBoundary;
 
         this.originalDimensions = { 
             x : this.dragItem.clientWidth, 
@@ -142,7 +146,7 @@ class PointerTrackerDragElement extends PointerTracker {
     }
 }
 
-export function startPointerTracker(dragItem, container) {
+export function startPointerTracker(dragItem, container, options : extendedOptions) {
     const pointerTracker = new PointerTrackerDragElement(dragItem, container, {
         start(pointer, event) {
             console.log('start');
@@ -195,7 +199,7 @@ export function startPointerTracker(dragItem, container) {
         },
         avoidPointerEvents: true, // edb - i am using duckduckgo browser and it doesnt like pointer events
         rawUpdates: false,
-    });
+    }, options);
 
     return pointerTracker
 }

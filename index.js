@@ -13,6 +13,8 @@ window.addEventListener("load", () => {
         thisPointerTracker.moveToMiddle(true)
     })
 
-    thisPointerTracker = startPointerTracker(dragElement, document.querySelector("body"))
+    thisPointerTracker = startPointerTracker(dragElement, document.querySelector("body"), {
+        paddingBoundary : 20
+    })
     thisPointerTracker.moveToMiddle(false)
 })
