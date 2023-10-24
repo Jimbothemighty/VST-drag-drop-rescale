@@ -1,6 +1,7 @@
 # Application Template Readme
 
 # VST Interview task
+- https://file.notion.so/f/s/9727accf-0093-4271-98e9-2aac75ae4e20/VST_TECHNICAL_TAKE_HOME_TASK_FE.md?id=3ebcd566-f7d7-4235-ac96-07e83f94f4b5&table=block&spaceId=e5dbac9a-1f47-40f4-93a3-6354faa40325&expirationTimestamp=1698199200000&signature=GBsI-bWsWoegApB_DaSOH2N19GqQY_pQf3FdnB6ZmhU&downloadName=VST_TECHNICAL_TAKE_HOME_TASK_FE.md
 
 ## Overview
 - Drag on click following mouse
@@ -22,3 +23,4 @@
 
 # Issues
 - I think on first click then the drag is not initiating for some reason. But its a barely noticable issue.
+- Interview guidance asked for resize ideally with 1 finger. I couldn't understand how to achieve that in the time provided given that it would be indistinguishable from a normal drag event.
