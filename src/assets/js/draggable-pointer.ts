@@ -9,29 +9,55 @@ type extendedOptions = {
     paddingBoundary : number
 }
 
+/**
+ * Extension class of PointerTracker to manage my extra state
+ */
 class PointerTrackerDragElement extends PointerTracker {
-    dragItem: HTMLDivElement;
-    currentX: number;
-    currentY: number;
-    initialX: number;
-    initialY: number;
-    xOffset: number;
-    yOffset: number;
+
+    /**
+     * The container element, which I insist is the body element
+     */
     container: HTMLBodyElement;
-    firstTimeSetup: boolean;
+
+    /**
+     * The element being dragged
+     */
+    dragItem: HTMLDivElement;
+
+    // // REFACTORED OUT!
+	// currentX : number;
+	// currentY : number;
+
+    // // REFACTORED OUT!
+    // initialX: number;
+    // initialY: number;
+
+    /**
+     * The current X position of the dragItem (centre point of element)
+     */
+    xOffset: number;
+
+    /**
+     * The current Y position of the dragItem (centre point of element)
+     */
+    yOffset: number;
+    
+    /**
+     * The closest the dragItem can move to the edge
+     */
     paddingBoundary: number;
+
+    /**
+     * The dimensions of the element when it was passed in (for calculating against min/max sizes)
+     */
     originalDimensions : dimensionsType;
 
-    constructor(dragItem : HTMLDivElement, container : HTMLElement, options : object, extendedOptions : extendedOptions) {
+    constructor(dragItem : HTMLDivElement, container : HTMLBodyElement, options : object, extendedOptions : extendedOptions) {
         super(container, options);
+        this.container = container;
         this.dragItem = dragItem;
         this.xOffset = 0;
         this.yOffset = 0;
-        this.initialX = 0;
-        this.initialY = 0;
-        this.currentX = 0;
-        this.initialY = 0;
-        this.firstTimeSetup = false;
         this.addResizeListener();
         this.paddingBoundary = extendedOptions.paddingBoundary;
 
@@ -41,16 +67,28 @@ class PointerTrackerDragElement extends PointerTracker {
         };
     }
 
-    // scaling function - 'pinched' from PinchZoom
-    getDistance(a, b) {
+    /**
+     * scaling function - 'pinched' from PinchZoom
+     * @param a 
+     * @param b 
+     * @returns number
+     */
+    getDistance(a, b) : number {
         if (!b)
             return 0;
         return Math.sqrt((b.clientX - a.clientX) ** 2 + (b.clientY - a.clientY) ** 2);
     }
 
+    /**
+     * Called when resizing element to ensure it is neither 
+     * too small or large against set limits and also against body inc. paddingBoundary 
+     * @param newWidth number
+     * @param newHeight number
+     * @returns dimensionsType
+     */
     calculateNewSizeAgainstLimits(newWidth : number, newHeight : number) : dimensionsType {
-        const maxWidthAgainstBody = document.body.clientWidth - (this.paddingBoundary * 2);
-        const maxHeightAgainstBody = document.body.clientWidth - (this.paddingBoundary * 2);
+        const maxWidthAgainstBody = this.container.clientWidth - (this.paddingBoundary * 2);
+        const maxHeightAgainstBody = this.container.clientWidth - (this.paddingBoundary * 2);
         const maxWidthAgainstOrig = this.originalDimensions.x * 4;
         const maxHeightAgainstOrig = this.originalDimensions.y * 4;
         const minWidthAgainstOrig = Math.ceil(this.originalDimensions.x / 4);
@@ -91,11 +129,20 @@ class PointerTrackerDragElement extends PointerTracker {
         }
     }
 
+    /**
+     * Called when element is resized or on window resize to ensure it is within bounds
+     * The max positions are calculated here AND ALSO in setTranslate. They only need to be
+     * done here to establish WHETHER to call setTranslate.
+     * I am sure this can be refactored
+     */
     repositionElement() {
         console.log('resize')
-        var maxXPos = document.body.clientWidth - this.dragItem.clientWidth - this.paddingBoundary;
-        var maxYPos = document.body.clientHeight - this.dragItem.clientHeight - this.paddingBoundary;
+        var maxXPos = this.container.clientWidth - this.dragItem.clientWidth - this.paddingBoundary;
+        var maxYPos = this.container.clientHeight - this.dragItem.clientHeight - this.paddingBoundary;
 
+        /** 
+         * if the element is outside the bounds (inc. paddingBoundary), then adjust it on resize
+         */
         if (this.xOffset > maxXPos || this.yOffset > maxYPos) {
             this.setTranslate(
                 this.xOffset > maxXPos ? maxXPos : this.xOffset,
@@ -105,18 +152,31 @@ class PointerTrackerDragElement extends PointerTracker {
         }
     }
 
-
+    /**
+     * Resize listener on window to check element position against bounds
+     */
     addResizeListener() {
         window.addEventListener("resize", (e) => {
             this.repositionElement();
         });
     }
 
+    /**
+     * Called on move of dragItem to set the new coords
+     * Also does some additional checking of boundary positions
+     * Observation: Set translate does NOT change any class properties.
+     * All changes to the state are done beforehand. But this might 
+     * not be right any more since the xPos and yPos may be changed here??
+     * @param xPos number
+     * @param yPos number
+     * @param el HTMLElement
+     * @param animate boolean
+     */
     setTranslate(xPos: number, yPos: number, el: HTMLElement, animate : boolean = false) {
         console.log("translating");
         console.log(el)
-        let maxXPos = document.body.clientWidth - this.dragItem.clientWidth - this.paddingBoundary;
-        let maxYPos = document.body.clientHeight - this.dragItem.clientHeight - this.paddingBoundary;
+        let maxXPos = this.container.clientWidth - this.dragItem.clientWidth - this.paddingBoundary;
+        let maxYPos = this.container.clientHeight - this.dragItem.clientHeight - this.paddingBoundary;
 
         xPos = xPos < this.paddingBoundary ? this.paddingBoundary : xPos;
         xPos = xPos > maxXPos ? maxXPos : xPos;
@@ -125,6 +185,9 @@ class PointerTrackerDragElement extends PointerTracker {
 
         xPos = xPos < this.paddingBoundary ? this.paddingBoundary : xPos;
         yPos = yPos < this.paddingBoundary ? this.paddingBoundary : yPos;
+
+        this.xOffset = xPos; // set the xOffset property so we can reference it for checking on window resize etc
+        this.yOffset = yPos; // set the xOffset property so we can reference it for checking on window resize etc
 
         if (animate) {
             el.classList.add("transition")
@@ -136,27 +199,38 @@ class PointerTrackerDragElement extends PointerTracker {
         el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
     }
 
+    /**
+     * Moves the dragItem to the centre of the body (or rather, the container, 
+     * which I store store in a property on the extension class.)
+     * @param animate boolean
+     */
     moveToMiddle(animate : boolean = true) {
-        this.xOffset = (document.body.clientWidth - this.dragItem.clientWidth) / 2;
-        this.yOffset = (document.body.clientHeight - this.dragItem.clientHeight) / 2;
-        this.currentX = document.body.clientWidth * 0.25;
-        this.currentY = document.body.clientHeight * 0.25;
+        let newX = (this.container.clientWidth - this.dragItem.clientWidth) / 2;
+        let newY = (this.container.clientHeight - this.dragItem.clientHeight) / 2;
 
-        this.setTranslate(this.xOffset, this.yOffset, this.dragItem, animate);
+        this.setTranslate(newX, newY, this.dragItem, animate);
     }
 }
 
 export function startPointerTracker(dragItem, container, options : extendedOptions) {
     const pointerTracker = new PointerTrackerDragElement(dragItem, container, {
+        /**
+         * pointer.client[X/Y] is the coordinates of where we clicked in the container (body in this case)
+         * this.[x/y]Offset is the current center point of the dragItem
+         * @param pointer 
+         * @param event 
+         * @returns 
+         */
         start(pointer, event) {
             console.log('start');
-            this.initialX = pointer.clientX - this.xOffset;
-            this.initialY = pointer.clientY - this.yOffset;
 
             if (event.target == this.dragItem) {
                 return true
             }
         },
+        /** 
+         * scales or moves element
+         */ 
         move(previousPointers, changedPointers, event) {
             console.log('move');
 
@@ -169,7 +243,7 @@ export function startPointerTracker(dragItem, container, options : extendedOptio
                 event.stopPropagation()
 
                 const prevDistance = this.getDistance(previousPointers[0], previousPointers[1]);
-                const newDistance = this.getDistance(pointerTracker.currentPointers[0], pointerTracker.currentPointers[1]);
+                const newDistance = this.getDistance(changedPointers[0], changedPointers[1]);
                 const scaleDiff = prevDistance ? newDistance / prevDistance : 1;
 
                 let newSizes = this.calculateNewSizeAgainstLimits(
@@ -177,25 +251,24 @@ export function startPointerTracker(dragItem, container, options : extendedOptio
                     dragItem.clientHeight * scaleDiff
                 )
 
-                this.dragItem.style.width = `${newSizes.x}px`; // - this.startX
-                this.dragItem.style.height = `${newSizes.y}px`; // - this.startY
+                this.dragItem.style.width = `${newSizes.x}px`;
+                this.dragItem.style.height = `${newSizes.y}px`;
 
                 this.repositionElement();
             }
             else if (changedPointers.length === 1) {
-                this.currentX = changedPointers[0].clientX - this.initialX;
-                this.currentY = changedPointers[0].clientY - this.initialY;
-    
-                this.xOffset = this.currentX;
-                this.yOffset = this.currentY;
-    
-                this.setTranslate(this.currentX, this.currentY, this.dragItem);
+                let newX = this.xOffset + (changedPointers[0].clientX - previousPointers[0].clientX); // set new center point x coord for element
+                let newY = this.yOffset + (changedPointers[0].clientY - previousPointers[0].clientY); // set center point y coord for element
+
+                this.setTranslate(newX, newY, this.dragItem);
             }
         },
+        /**
+         * Nothing needs to be done. We were setting state here, 
+         * but it can be done away since the point events manage it better
+         */
         end(pointer, event, cancelled) {
             console.log('stop');
-            this.initialX = this.currentX;
-            this.initialY = this.currentY;
         },
         avoidPointerEvents: true, // edb - i am using duckduckgo browser and it doesnt like pointer events
         rawUpdates: false,

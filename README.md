@@ -27,3 +27,6 @@
 - In order to understand the boundary I refer directly to the body.clientWidth/clientHeight, which is also the container element provided to PointerTracker. This is a private propety in PointerTracker. It would be better to modify the library to make it protected so that it can be referenced in my extension class. Without this then potentially I could pass in a different container than the body and then I have to modify my code in other non-obvious places to make it work. What I could do is store a seperate reference to the container in the extension class too, but that would be doubling up. (Replace anywhere that called document.body with this.extContainer and add it to the class property list)
 - It looks like the position / boundary may been checked in more than one place. This should be consolidated. I.e. start, move, end, setTranslate, moveToMiddle, repositionElement, calculateNewSizeAgainstLimits
 - There is superfluous x/y state. currentX and currentY can be completely removed for instance
+
+# Corrections on this branch
+- Removed and refactored a lot of the original state that was managing the amount to move by (for smooth drag)
